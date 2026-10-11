@@ -1,0 +1,43 @@
+{
+  "name": "ai-for-developers-project-387",
+  "version": "1.0.0",
+  "description": "[![hexlet-check](https://github.com/SergeyBesck/ai-for-developers-project-387/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/SergeyBesck/ai-for-developers-project-387/actions)",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "npm run test:sdk",
+    "test:sdk": "node --test \"tests/js/*.test.mjs\"",
+    "lint": "eslint public/assets tests/js",
+    "gen:openapi": "tsp compile tsp",
+    "gen:php": "php vendor/bin/jane-openapi generate",
+    "gen:routes": "node scripts/generate-routes.mjs",
+    "gen:sdk": "npx @hey-api/openapi-ts -f hey-api.config.mjs && esbuild generated/sdk/index.ts --bundle --format=esm --target=es2020 --outfile=public/assets/sdk.gen.js",
+    "generate": "npm run gen:openapi && npm run gen:php && npm run gen:routes && npm run gen:sdk"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SergeyBesck/ai-for-developers-project-387.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SergeyBesck/ai-for-developers-project-387/issues"
+  },
+  "homepage": "https://github.com/SergeyBesck/ai-for-developers-project-387#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@hey-api/openapi-ts": "0.99.0",
+    "@typespec/compiler": "1.17.0",
+    "@typespec/http": "1.17.0",
+    "@typespec/openapi": "1.17.0",
+    "@typespec/openapi3": "1.17.0",
+    "esbuild": "0.28.2",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "typescript": "5.9.3"
+  }
+}

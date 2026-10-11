@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+// Относительные пути обязательны: jane читает абсолютный Windows-путь (D:/...)
+// как URL-схему "d". npm-скрипты запускаются из корня репозитория.
+return [
+    'openapi-file' => 'openapi.json',
+    'namespace' => 'App\\Generated',
+    'directory' => 'generated',
+    'strict' => true,
+];

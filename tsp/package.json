@@ -1,0 +1,6 @@
+{
+  "name": "calendar-contract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeSpec-контракт API «Календарь звонков». Версия из этого файла попадает в info.version openapi.json."
+}
