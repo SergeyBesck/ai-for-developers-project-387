@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Админка — Calendar</title>
+  <meta name="description" content="Типы событий, на которые идёт запись, и предстоящие записи Гостей: список и создание типа.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <svg class="brand-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4.5" width="18" height="16.5" rx="3"></rect>
+          <path d="M3 9.5h18"></path>
+          <path d="M8 2.5v4M16 2.5v4"></path>
+          <circle cx="12" cy="15" r="3.4"></circle>
+          <path d="M12 13.4V15l1.3.9"></path>
+        </svg>
+        <span class="brand-name">Calendar</span>
+      </a>
+      <nav class="header-nav" aria-label="Основная навигация">
+        <a class="header-link" href="booking.html">Записаться</a>
+        <a class="header-link" href="admin.html" aria-current="page">Админка</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container admin">
+    <h1 class="admin-title">Админка</h1>
+    <p class="lead">Типы событий, на которые идёт запись, и предстоящие записи.</p>
+
+    <nav class="admin-tabs" aria-label="Разделы админки">
+      <button class="admin-tab active" type="button" id="tab-event-types" role="tab"
+              aria-selected="true" aria-controls="panel-event-types">Типы событий</button>
+      <button class="admin-tab" type="button" id="tab-bookings" role="tab"
+              aria-selected="false" aria-controls="panel-bookings">Предстоящие записи</button>
+    </nav>
+
+    <section class="card admin-panel" id="panel-event-types" role="tabpanel" aria-labelledby="tab-event-types">
+      <div class="admin-toolbar">
+        <h2 id="event-types-heading">Типы событий</h2>
+        <button class="btn btn-primary" type="button" id="open-create">Создать тип события</button>
+      </div>
+
+      <p class="admin-error" id="list-error" role="alert" hidden></p>
+
+      <p class="empty-state" id="empty-state" hidden>Типов событий ещё нет</p>
+
+      <div class="table-wrap" id="table-wrap" hidden>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Название</th>
+              <th scope="col">Описание</th>
+              <th scope="col">Длительность</th>
+            </tr>
+          </thead>
+          <tbody id="event-types-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card admin-panel" id="panel-bookings" role="tabpanel" aria-labelledby="tab-bookings" hidden>
+      <div class="admin-toolbar">
+        <h2 id="bookings-heading">Предстоящие записи</h2>
+      </div>
+
+      <p class="admin-note">Авторизации в сервисе нет: email Гостей видит любой, у кого открыта админка.</p>
+
+      <p class="admin-status" id="bookings-loading">Загружаем записи…</p>
+
+      <p class="admin-error" id="bookings-error" role="alert" hidden></p>
+
+      <p class="empty-state" id="bookings-empty" hidden>Предстоящих записей нет</p>
+
+      <div class="booking-days" id="booking-days" hidden></div>
+    </section>
+  </main>
+
+  <dialog class="modal" id="create-dialog" aria-labelledby="create-dialog-title">
+    <form class="modal-form" id="create-form">
+      <h2 id="create-dialog-title">Новый тип события</h2>
+
+      <p class="form-error" id="create-error" role="alert" hidden></p>
+
+      <label class="field">
+        <span class="field-label">ID (slug) *</span>
+        <input type="text" id="event-type-id" name="id" placeholder="consult"
+               pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Строчные латинские буквы, цифры и дефисы" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Название *</span>
+        <input type="text" id="event-type-name" name="name" placeholder="Консультация" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Длительность, минут *</span>
+        <input type="number" id="event-type-duration" name="durationMinutes" value="30" min="1" max="540" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Описание</span>
+        <textarea id="event-type-description" name="description" rows="2" placeholder="Необязательно"></textarea>
+      </label>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="cancel-create">Отмена</button>
+        <button class="btn btn-primary" type="submit" id="submit-create">Создать</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="assets/admin.js"></script>
+</body>
+</html>

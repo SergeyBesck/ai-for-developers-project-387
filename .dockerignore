@@ -1,0 +1,37 @@
+# VCS и CI
+.git
+.github
+.agents
+
+# Зависимости и артефакты разработки: в образ ставятся только через composer install
+node_modules
+vendor
+tests
+docs
+tsp
+scripts
+public/prototype
+
+# Кэши инструментов
+.php-cs-fixer.cache
+.phpunit.result.cache
+.jane-openapi
+
+# Файлы SQLite — база живёт в каталоге /app/var внутри контейнера
+var
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Служебные файлы репозитория, приложению не нужны
+Dockerfile
+.dockerignore
+*.md
+eslint.config.js
+hey-api.config.mjs
+phpstan.neon
+phpunit.xml
+release-please-config.json
+.release-please-manifest.json
+skills-lock.json

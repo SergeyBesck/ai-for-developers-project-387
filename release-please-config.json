@@ -1,0 +1,1 @@
+{ "packages": { ".": { "release-type": "simple", "package-name": "my-project" } } }

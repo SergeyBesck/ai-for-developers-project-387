@@ -1,0 +1,6 @@
+vendor/
+node_modules/
+var/
+.php-cs-fixer.cache
+.phpunit.cache/
+.phpunit.result.cache
