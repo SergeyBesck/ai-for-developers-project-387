@@ -1,0 +1,66 @@
+
+name: OpenCode PR Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: read
+      issues: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Review Pull Request
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/mimo-v2.6-flash-free
+          use_github_token: true
+          prompt: |
+            Ты выполняешь автоматическое ревью Pull Request
+            в проекте «Календарь звонков».
+
+            Проект использует PHP, SQLite, API-контракты
+            в tsp/ и openapi.json.
+
+            Изучи изменения текущего Pull Request.
+
+            Проверь:
+
+            1. Соответствие изменений исходному issue.
+            2. Возможные ошибки и регрессии.
+            3. Корректность PHP-кода и SQL-запросов.
+            4. Безопасность обработки пользовательских данных.
+            5. Соответствие API-контрактам.
+            6. Наличие необходимых проверок и тестов.
+            7. Соответствие существующему стилю проекта.
+            8. Соблюдение правил AGENTS.md.
+
+            Правила ревью:
+
+            - Не изменяй файлы.
+            - Не создавай коммиты.
+            - Не выполняй merge.
+            - Не придумывай ошибки, которых нет.
+            - Для каждого замечания объясняй проблему
+              и предлагай конкретное исправление.
+            - Пиши комментарии на русском языке.
+            - Если критических проблем нет, сообщи об этом.
+
+            Оставь результат ревью в Pull Request.
