@@ -39,7 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: opencode/minimax-m2.5
+          model: opencode/mimo-v2.6-flash-free
           prompt: |
             Review this pull request as a careful senior software engineer.
 
