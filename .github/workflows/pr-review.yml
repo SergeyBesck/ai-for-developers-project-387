@@ -63,4 +63,3 @@ jobs:
             - If no actionable issues are found, say so explicitly.
             - Do not modify files or commit changes.
             - Publish the review findings on this pull request.
-```
