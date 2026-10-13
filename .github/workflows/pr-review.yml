@@ -2,11 +2,7 @@ name: OpenCode PR Review
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -26,45 +22,41 @@ jobs:
       github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Run OpenCode Review
         uses: anomalyco/opencode/github@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
           model: opencode/mimo-v2.6-flash-free
+          use_github_token: true
           prompt: |
             Review pull request #${{ github.event.pull_request.number }}.
-          
-            Your only task is to review the pull request diff and publish
-            actionable review findings.
-          
-            Follow these steps:
-            1. Read the pull request diff.
-            2. Inspect only the changed files and the surrounding code needed
-               to verify potential issues.
-            3. Identify concrete bugs, security vulnerabilities, regressions,
-               and missing tests.
-            4. Publish the findings on the pull request.
-            5. Finish immediately.
-          
-            Strict restrictions:
-            - Do not inspect git history or run git log.
-            - Do not inspect release-please configuration or release manifests
-              unless they are changed in this pull request.
-            - Do not inspect unrelated workflow files.
-            - Do not query PR mergeability, review decisions, or CI status.
-            - Do not inspect other workflow runs or their logs.
-            - Do not modify files, create commits, or push changes.
-            - Do not wait, poll, retry indefinitely, or use sleep.
-            - Do not investigate repository settings.
-            - Report only verified, actionable issues.
-            - If no issues are found, explicitly report that no actionable
-              issues were identified.
+
+            Get the changes with: gh pr diff ${{ github.event.pull_request.number }}
+            Read the changed files and only as much surrounding code as you
+            need to confirm a finding.
+
+            Review criteria:
+            1. Bugs and obvious logic errors.
+            2. Code style and consistency with the surrounding code.
+            3. Wrong or missing types, unchecked input, unhandled errors.
+            4. Security problems (injection, XSS, leaked secrets).
+            5. Changed behavior without tests.
+
+            Output: post one comment on the pull request, written in Russian.
+            For each finding give the file, line, the problem and a suggested
+            fix. Report only issues you verified in the diff. If there are
+            none, say that no actionable issues were found and summarize the
+            change in one sentence.
+
+            This is a read-only review: do not modify files or create
+            commits. Stop right after posting the comment.
