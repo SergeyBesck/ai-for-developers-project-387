@@ -1,0 +1,33 @@
+name: Issue Triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: anthropic/claude-sonnet-4-5
+          prompt: |
+            Ты разбираешь новую жалобу пользователя в проекте «Календарь звонков»
+            (PHP, SQLite, контракт API в tsp/ и openapi.json).
+            Прочитай issue и код репозитория, затем оставь один комментарий:
+            1. Вероятная причина и на чём она основана (файлы и функции).
+            2. Какие части кода затронуты.
+            3. Как воспроизвести проблему.
+            4. Предлагаемый путь исправления, без правок кода.
+            5. Что осталось неясным и что нужно уточнить у автора.
+            Не придумывай факты о коде, которых не видел. Не меняй файлы.
