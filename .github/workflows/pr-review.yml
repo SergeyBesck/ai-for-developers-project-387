@@ -15,7 +15,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pr-review-${{ github.event.pull_request.number }}
+  group: opencode-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -25,15 +25,9 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          persist-credentials: false
-
       - name: Run OpenCode Review
         uses: anomalyco/opencode/github@latest
         env:
@@ -41,33 +35,31 @@ jobs:
         with:
           model: opencode/mimo-v2.6-flash-free
           prompt: |
-            Review this pull request as a careful senior software engineer.
+            Review the changes introduced by this pull request.
 
-            Analyze the changes in the current pull request and identify
-            concrete bugs, regressions, security risks, and missing tests.
+            Review for:
+            1. Bugs, incorrect logic, and unhandled edge cases.
+            2. Security vulnerabilities.
+            3. Regressions and compatibility issues.
+            4. Missing tests for important behavior.
+            5. Maintainability problems that could cause real defects.
 
-            Review criteria:
-            1. Correctness: look for incorrect logic, edge cases, and failures.
-            2. Security: identify vulnerabilities and unsafe handling of input.
-            3. Compatibility: check for regressions and breaking changes.
-            4. Tests: identify missing tests for important behavior.
-            5. Maintainability: flag only meaningful problems that should
-               be fixed before merging.
-
-            Instructions:
+            Requirements:
             - Focus on issues introduced by this pull request.
-            - Do not report purely stylistic preferences as bugs.
-            - Do not invent problems; verify findings against the code.
-            - For each finding, explain the problem and its impact.
-            - Provide a specific, actionable recommendation.
-            - If no actionable issues are found, say so explicitly.
-            - Do not modify files or commit changes.
-            - Publish the review findings on this pull request.
+            - Inspect the diff and relevant surrounding code.
+            - Report only concrete, actionable findings.
+            - Explain the impact of each finding.
+            - Include the relevant changed lines when possible.
+            - Do not invent issues or report stylistic preferences.
+            - If no actionable issues are found, state that clearly.
+            - Publish review findings on this pull request.
+            - Do not modify files, create commits, or push changes.
 
-            Workflow execution constraints:
-            - Do not wait for the current GitHub Actions run to complete.
-            - Do not poll the current run using `gh run view`.
-            - Do not wait for this workflow from inside this workflow.
-            - Do not use loops or sleep commands to wait for workflow completion.
-            - Review the pull request changes and publish findings directly.
-            - Finish the task as soon as the review is published.
+            Execution restrictions:
+            - Do not inspect other GitHub Actions runs or their logs.
+            - Do not use `gh run view` or poll workflow statuses.
+            - Do not wait for this or any other workflow to complete.
+            - Do not use sleep commands or polling loops.
+            - Do not investigate branch protection or repository settings.
+            - Do not attempt to merge the pull request.
+            - Complete the review and stop.
