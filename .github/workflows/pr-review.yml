@@ -52,11 +52,15 @@ jobs:
             4. Security problems (injection, XSS, leaked secrets).
             5. Changed behavior without tests.
 
-            Output: post one comment on the pull request, written in Russian.
-            For each finding give the file, line, the problem and a suggested
-            fix. Report only issues you verified in the diff. If there are
-            none, say that no actionable issues were found and summarize the
-            change in one sentence.
+            Your final reply IS the review. The workflow publishes it as a
+            pull request comment automatically, so do not try to post,
+            comment, or authenticate anything yourself, and do not read
+            documentation about OpenCode, GitHub Actions or tokens.
+
+            Write the review in Russian. For each finding give the file,
+            line, the problem and a suggested fix. Report only issues you
+            verified in the diff. If there are none, say that no actionable
+            issues were found and summarize the change in one sentence.
 
             This is a read-only review: do not modify files or create
-            commits. Stop right after posting the comment.
+            commits. Finish right after writing the review.
