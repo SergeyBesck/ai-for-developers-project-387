@@ -41,20 +41,30 @@ jobs:
         with:
           model: opencode/mimo-v2.6-flash-free
           prompt: |
-            Review the changes introduced by this pull request.
-
-            Check for:
-            - Bugs and incorrect logic.
-            - Security vulnerabilities.
-            - Regressions and compatibility issues.
-            - Missing tests for important behavior.
-
-            Focus on concrete issues introduced by this pull request.
-            Explain the impact and provide actionable recommendations.
-            Publish findings on this pull request.
-            Do not modify files or create commits.
-
-            Do not inspect other GitHub Actions runs.
-            Do not poll workflow statuses or wait for workflows.
-            Do not investigate branch protection or repository settings.
-            Finish after publishing the review.
+            Review pull request #${{ github.event.pull_request.number }}.
+          
+            Your only task is to review the pull request diff and publish
+            actionable review findings.
+          
+            Follow these steps:
+            1. Read the pull request diff.
+            2. Inspect only the changed files and the surrounding code needed
+               to verify potential issues.
+            3. Identify concrete bugs, security vulnerabilities, regressions,
+               and missing tests.
+            4. Publish the findings on the pull request.
+            5. Finish immediately.
+          
+            Strict restrictions:
+            - Do not inspect git history or run git log.
+            - Do not inspect release-please configuration or release manifests
+              unless they are changed in this pull request.
+            - Do not inspect unrelated workflow files.
+            - Do not query PR mergeability, review decisions, or CI status.
+            - Do not inspect other workflow runs or their logs.
+            - Do not modify files, create commits, or push changes.
+            - Do not wait, poll, retry indefinitely, or use sleep.
+            - Do not investigate repository settings.
+            - Report only verified, actionable issues.
+            - If no issues are found, explicitly report that no actionable
+              issues were identified.
