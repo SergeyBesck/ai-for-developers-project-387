@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.4.0](https://github.com/SergeyBesck/ai-for-developers-project-387/compare/my-project-v1.3.0...my-project-v1.4.0) (2026-10-14)
+
+
+### Features
+
+* **admin:** вкладка расписания — рабочие дни и часы приёма ([4af9742](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/4af974223fdf13a54c007bf446a7679b44a4b41c))
+* **schedule:** контракт расписания и операции GET/PUT /schedule ([39c0416](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/39c041644d2bcc9a738f4cc49b9e3f69cadcdadd))
+* **schedule:** хост задаёт рабочие дни и часы приёма ([2e5bc40](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/2e5bc407942edb1bd208581eeb1304ed76d6163b))
+* **schedule:** хост задаёт рабочие дни и часы приёма ([2e5bc40](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/2e5bc407942edb1bd208581eeb1304ed76d6163b))
+* **schedule:** хранение расписания и правила слотов по рабочим дням ([0c0450a](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/0c0450a741454ae6cf858d7866eb2d122c29da68))
+
+
+### Bug Fixes
+
+* **ci:** воркфлоу агента не реагирует на комментарии ботов ([5018ec6](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/5018ec6c5209a354c4275ddfec0cbdb9d2f5c889))
+* **ci:** воркфлоу агента не реагирует на комментарии ботов ([83d3341](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/83d3341e3dcfeda9b5b7a29c49fbc056aba5a791))
+* **schedule:** запрет дубликатов workingDays в контракте ([db964f1](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/db964f1e2d927b212e7f89a0a1f255d3ea24597c))
+* **schedule:** нормализовать workingDays без дубликатов в Schedule::create() ([069c3e4](https://github.com/SergeyBesck/ai-for-developers-project-387/commit/069c3e4023c13e61e34c8bbe77df6e9fb71a84b2))
+
 ## [1.3.0](https://github.com/SergeyBesck/ai-for-developers-project-386/compare/my-project-v1.2.0...my-project-v1.3.0) (2026-10-11)
 
 
