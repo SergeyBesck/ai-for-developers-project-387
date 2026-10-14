@@ -1,0 +1,110 @@
+name: Scheduled Lighthouse audit
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # раз в сутки, 06:17 UTC (09:17 по Краснодару)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+concurrency:
+  group: lighthouse-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Lighthouse audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TARGET_URL: ${{ vars.LIGHTHOUSE_URL }}
+    steps:
+      - name: Check target URL
+        run: |
+          if [ -z "$TARGET_URL" ]; then
+            echo "::error::Задайте переменную репозитория LIGHTHOUSE_URL (Settings → Secrets and variables → Actions → Variables)"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # Отчёт не должен попасть в git-изменения, иначе агент оформит его PR-ом
+      - name: Keep report out of git
+        run: echo "lighthouse/" >> .git/info/exclude
+
+      - name: Run Lighthouse
+        run: |
+          mkdir -p lighthouse
+          npx --yes lighthouse@12 "$TARGET_URL" \
+            --quiet \
+            --chrome-flags="--headless=new --no-sandbox" \
+            --output=json --output=html \
+            --output-path=./lighthouse/report
+          mv "$(ls lighthouse/*.json | head -n 1)" lighthouse/report.json
+
+      - name: Build summary
+        run: |
+          jq -r '
+            "# Lighthouse: \(.finalDisplayedUrl // .finalUrl)",
+            "",
+            "| Категория | Оценка |",
+            "|---|---|",
+            (.categories | to_entries[] | "| \(.value.title) | \(((.value.score // 0) * 100) | round) |"),
+            "",
+            "## Провалы (оценка ниже 90)",
+            "",
+            ( [ .audits[]
+                | select(.score != null and .score < 0.9
+                         and .scoreDisplayMode != "informative"
+                         and .scoreDisplayMode != "notApplicable") ]
+              | sort_by(.score) | .[0:15][]
+              | "- **\(.title)** (`\(.id)`, оценка \((.score * 100) | round))"
+                + (if .displayValue then " — \(.displayValue)" else "" end) )
+          ' lighthouse/report.json > lighthouse/summary.md
+          cat lighthouse/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse/
+          retention-days: 30
+
+      - name: Analyze report and file issues
+        uses: anomalyco/opencode/github@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/mimo-v2.6-flash-free
+          use_github_token: true
+          prompt: |
+            You are a web performance auditor. A Lighthouse report for
+            ${{ vars.LIGHTHOUSE_URL }} was just generated in the lighthouse/
+            directory.
+
+            Steps:
+            1. Read lighthouse/summary.md (scores and failed audits). Use jq
+               on lighthouse/report.json only if you need details of one audit.
+            2. List open issues already tracking findings:
+               gh issue list --state open --search "[Lighthouse] in:title" --json number,title
+            3. For the most impactful findings (lowest score or largest
+               savings) that are not tracked yet, create up to 3 issues with
+               gh issue create. Title format: "[Lighthouse] <short finding>".
+               Write the body in Russian: what was found, audit id, measured
+               value, why it matters, a concrete suggested fix, and a link to
+               the run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+               (the full report is in the artifact "lighthouse-report").
+            4. If there are no failed audits, create no issues.
+            5. Finish with a short summary in Russian: scores and the numbers
+               of the created issues.
+
+            Do not read OpenCode or GitHub documentation. Do not modify files,
+            create commits, branches or pull requests.
