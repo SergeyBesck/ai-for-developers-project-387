@@ -89,7 +89,16 @@ curl -X POST http://localhost:8000/api/event-types \
   -d '{"id":"consult","name":"Консультация","durationMinutes":30}'
 
 curl http://localhost:8000/api/event-types
+
+# Расписание приёма записей: по умолчанию пн–пт, 10:00–18:00 в поясе приложения.
+curl http://localhost:8000/api/schedule
+
+curl -X PUT http://localhost:8000/api/schedule \
+  -H "Content-Type: application/json" \
+  -d '{"workingDays":["mon","tue","wed","thu","fri","sat"],"dayStart":"10:00","dayEnd":"14:00"}'
 ```
+
+Расписание одно на весь календарь: рабочие дни недели плюс единые часы для всех рабочих дней. Слоты предлагаются и записи принимаются только в рабочие дни; окно записи — 14 календарных дней. Уже созданные записи при смене расписания не изменяются. Изменить расписание можно и в админке — вкладка «Расписание».
 
 ## Генерация кода из контракта
 
