@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   audit:
+    if: ${{ !endsWith(github.actor, '[bot]') }}
     name: Lighthouse audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -85,6 +86,7 @@ jobs:
         with:
           model: opencode/mimo-v2.6-flash-free
           use_github_token: true
+          share: false
           prompt: |
             You are a web performance auditor. A Lighthouse report for
             ${{ vars.LIGHTHOUSE_URL }} was just generated in the lighthouse/

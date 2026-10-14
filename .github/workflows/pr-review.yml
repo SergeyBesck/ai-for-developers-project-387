@@ -20,7 +20,7 @@ jobs:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.draft == false &&
-      github.actor != 'github-actions[bot]'
+      github.actor != 'github-actions[bot]' && !endsWith(github.actor, '[bot]')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -29,6 +29,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          share: false
           persist-credentials: false
 
       - name: Run OpenCode Review
