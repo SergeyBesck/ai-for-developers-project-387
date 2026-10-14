@@ -32,7 +32,7 @@ final class Schedule
     private const TIME_PATTERN = '/^([01][0-9]|2[0-3]):(00|15|30|45)$/';
 
     /**
-     * @param list<string> $workingDays коды дней mon..sun (ISO-порядок не обязателен)
+     * @param list<string> $workingDays коды дней mon..sun без повторов (ISO-порядок не обязателен)
      */
     private function __construct(
         public readonly array $workingDays,
@@ -48,6 +48,9 @@ final class Schedule
     }
 
     /**
+     * Повторы дней отбрасываются: на входе остаются только уникальные коды в порядке первого вхождения,
+     * поэтому расписание без дубликатов независимо от источника данных (API, база, прямой вызов).
+     *
      * @param list<string> $workingDays
      *
      * @throws InvalidArgumentException нет рабочих дней, неизвестный день, время не на сетке 15 минут
@@ -55,6 +58,8 @@ final class Schedule
      */
     public static function create(array $workingDays, string $dayStart, string $dayEnd): self
     {
+        $workingDays = array_values(array_unique($workingDays));
+
         if ($workingDays === []) {
             throw new InvalidArgumentException('Нужен хотя бы один рабочий день недели');
         }

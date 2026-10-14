@@ -47,6 +47,14 @@ final class ScheduleTest extends TestCase
         );
     }
 
+    public function testCreateDeduplicatesWorkingDays(): void
+    {
+        $schedule = Schedule::create(['mon', 'tue', 'mon', 'wed', 'tue'], '10:00', '18:00');
+
+        self::assertSame(['mon', 'tue', 'wed'], $schedule->workingDays);
+        self::assertSame(['mon', 'tue', 'wed'], $schedule->toApi()['workingDays']);
+    }
+
     public function testCreateRejectsInvalidSchedules(): void
     {
         $cases = [
