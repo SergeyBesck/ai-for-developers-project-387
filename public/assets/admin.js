@@ -1,4 +1,4 @@
-import { createEventType, listBookings, listEventTypes } from './sdk.gen.js';
+import { createEventType, getSchedule, listBookings, listEventTypes, updateSchedule } from './sdk.gen.js';
 
 const emptyState = document.getElementById('empty-state');
 const tableWrap = document.getElementById('table-wrap');
@@ -19,11 +19,19 @@ const idInput = document.getElementById('event-type-id');
 const nameInput = document.getElementById('event-type-name');
 const durationInput = document.getElementById('event-type-duration');
 const descriptionInput = document.getElementById('event-type-description');
+const scheduleForm = document.getElementById('schedule-form');
+const scheduleError = document.getElementById('schedule-error');
+const scheduleSaved = document.getElementById('schedule-saved');
+const scheduleDayStart = document.getElementById('schedule-day-start');
+const scheduleDayEnd = document.getElementById('schedule-day-end');
+const submitSchedule = document.getElementById('submit-schedule');
 
 const DUPLICATE_MESSAGE = 'Тип события с таким ID уже существует';
 const LOAD_ERROR_MESSAGE = 'Не удалось загрузить типы событий';
 const CREATE_ERROR_MESSAGE = 'Не удалось создать тип события';
 const LOAD_BOOKINGS_ERROR = 'Не удалось загрузить записи';
+const LOAD_SCHEDULE_ERROR = 'Не удалось загрузить расписание';
+const SAVE_SCHEDULE_ERROR = 'Не удалось сохранить расписание';
 
 function showError(element, message) {
   element.textContent = message;
@@ -228,6 +236,69 @@ function selectTab(tab) {
   }
 }
 
+function weekdayInputs() {
+  return [...scheduleForm.querySelectorAll('input[name="weekday"]')];
+}
+
+function fillScheduleForm(schedule) {
+  const workingDays = Array.isArray(schedule.workingDays) ? schedule.workingDays : [];
+
+  for (const input of weekdayInputs()) {
+    input.checked = workingDays.includes(input.value);
+  }
+
+  scheduleDayStart.value = schedule.dayStart;
+  scheduleDayEnd.value = schedule.dayEnd;
+}
+
+async function loadSchedule() {
+  hideError(scheduleError);
+  scheduleSaved.hidden = true;
+
+  const { data, error } = await getSchedule();
+
+  if (error) {
+    showError(scheduleError, problemDetail(error) || LOAD_SCHEDULE_ERROR);
+    return;
+  }
+
+  if (data && typeof data === 'object') {
+    fillScheduleForm(data);
+  }
+}
+
+scheduleForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  hideError(scheduleError);
+  scheduleSaved.hidden = true;
+  submitSchedule.disabled = true;
+
+  const body = {
+    workingDays: weekdayInputs()
+      .filter((input) => input.checked)
+      .map((input) => input.value),
+    dayStart: scheduleDayStart.value,
+    dayEnd: scheduleDayEnd.value,
+  };
+
+  try {
+    const { data, error } = await updateSchedule({ body });
+
+    if (error) {
+      showError(scheduleError, problemDetail(error) || SAVE_SCHEDULE_ERROR);
+      return;
+    }
+
+    if (data && typeof data === 'object') {
+      fillScheduleForm(data);
+    }
+
+    scheduleSaved.hidden = false;
+  } finally {
+    submitSchedule.disabled = false;
+  }
+});
+
 for (const tab of tabs) {
   tab.addEventListener('click', () => selectTab(tab));
 }
@@ -270,4 +341,4 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-await Promise.all([load(), loadBookings()]);
+await Promise.all([load(), loadBookings(), loadSchedule()]);
