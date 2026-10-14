@@ -66,7 +66,7 @@ class Client extends \App\Generated\Runtime\Client\Client
         return $this->executeEndpoint(new \App\Generated\Endpoint\GetEventType($id, $accept));
     }
     /**
-     * Слоты на окно записи (от текущего момента, округлённого вверх до 15 минут, до конца 14-го календарного дня в поясе приложения).
+     * Слоты на окно записи в рабочие дни по расписанию приёма (от текущего момента, округлённого вверх до 15 минут, до конца 14-го календарного дня в поясе приложения).
      * @param string $id
      * @param array $accept Accept content header application/json|application/problem+json
      * @throws \App\Generated\Exception\ListSlotsNotFoundException
@@ -77,6 +77,29 @@ class Client extends \App\Generated\Runtime\Client\Client
     public function listSlots(string $id, array $accept = [])
     {
         return $this->executeEndpoint(new \App\Generated\Endpoint\ListSlots($id, $accept));
+    }
+    /**
+     * @throws \App\Generated\Exception\BadResponseException
+     *
+     * @return \App\Generated\Model\Schedule
+     */
+    public function getSchedule()
+    {
+        return $this->executeEndpoint(new \App\Generated\Endpoint\GetSchedule());
+    }
+    /**
+     * Обновление расписания Хостом: рабочие дни недели плюс единые часы для всех рабочих дней. 422 — конец рабочего дня не позже начала. Уже созданные записи не изменяются.
+     * @param \App\Generated\Model\Schedule $requestBody
+     * @param array $accept Accept content header application/json|application/problem+json
+     * @throws \App\Generated\Exception\UpdateScheduleBadRequestException
+     * @throws \App\Generated\Exception\UpdateScheduleUnprocessableEntityException
+     * @throws \App\Generated\Exception\BadResponseException
+     *
+     * @return \App\Generated\Model\Schedule
+     */
+    public function updateSchedule(\App\Generated\Model\Schedule $requestBody, array $accept = [])
+    {
+        return $this->executeEndpoint(new \App\Generated\Endpoint\UpdateSchedule($requestBody, $accept));
     }
     /**
      * @param list<callable(\Symfony\Contracts\HttpClient\HttpClientInterface): \Symfony\Contracts\HttpClient\HttpClientInterface> $additionalPlugins HttpClientInterface decorator factories, applied left-to-right after the server URL decorator

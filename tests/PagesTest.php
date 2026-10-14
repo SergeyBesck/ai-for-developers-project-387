@@ -158,6 +158,34 @@ final class PagesTest extends TestCase
         self::assertStringNotContainsString('innerHTML', $js);
     }
 
+    public function testAdminPageHasScheduleTabWithWeekdaysAndHours(): void
+    {
+        $html = self::page('admin.html');
+
+        self::assertStringContainsString('id="tab-schedule"', $html);
+        self::assertStringContainsString('id="panel-schedule"', $html);
+        self::assertStringContainsString('Расписание приёма записей', $html);
+        self::assertStringContainsString('id="schedule-form"', $html);
+        self::assertStringContainsString('value="mon"', $html);
+        self::assertStringContainsString('value="sun"', $html);
+        self::assertStringContainsString('id="schedule-day-start"', $html);
+        self::assertStringContainsString('id="schedule-day-end"', $html);
+        self::assertStringContainsString('step="900"', $html);
+        // Расписание одно на весь календарь, уже созданные записи не меняются — сказано текстом.
+        self::assertStringContainsString('Уже созданные записи не изменяются', $html);
+    }
+
+    public function testAdminScriptLoadsAndSavesScheduleThroughGeneratedSdk(): void
+    {
+        $js = self::page('assets/admin.js');
+
+        self::assertStringContainsString('getSchedule', $js);
+        self::assertStringContainsString('updateSchedule', $js);
+        self::assertStringContainsString("from './sdk.gen.js'", $js);
+        self::assertStringNotContainsString('fetch(', $js);
+        self::assertStringNotContainsString('innerHTML', $js);
+    }
+
     public function testBookingScriptUsesGeneratedSdkWithoutManualFetch(): void
     {
         $js = self::page('assets/booking.js');

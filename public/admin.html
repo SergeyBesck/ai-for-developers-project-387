@@ -36,6 +36,8 @@
               aria-selected="true" aria-controls="panel-event-types">Типы событий</button>
       <button class="admin-tab" type="button" id="tab-bookings" role="tab"
               aria-selected="false" aria-controls="panel-bookings">Предстоящие записи</button>
+      <button class="admin-tab" type="button" id="tab-schedule" role="tab"
+              aria-selected="false" aria-controls="panel-schedule">Расписание</button>
     </nav>
 
     <section class="card admin-panel" id="panel-event-types" role="tabpanel" aria-labelledby="tab-event-types">
@@ -77,6 +79,48 @@
       <p class="empty-state" id="bookings-empty" hidden>Предстоящих записей нет</p>
 
       <div class="booking-days" id="booking-days" hidden></div>
+    </section>
+
+    <section class="card admin-panel" id="panel-schedule" role="tabpanel" aria-labelledby="tab-schedule" hidden>
+      <div class="admin-toolbar">
+        <h2 id="schedule-heading">Расписание приёма записей</h2>
+      </div>
+
+      <p class="admin-note">Расписание одно на весь календарь, часы — в поясе приложения. Уже созданные записи не изменяются.</p>
+
+      <p class="admin-error" id="schedule-error" role="alert" hidden></p>
+
+      <form class="schedule-form" id="schedule-form">
+        <fieldset class="schedule-days">
+          <legend>Рабочие дни недели</legend>
+          <div class="weekday-row">
+            <label class="weekday"><input type="checkbox" name="weekday" value="mon"><span>Пн</span></label>
+            <label class="weekday"><input type="checkbox" name="weekday" value="tue"><span>Вт</span></label>
+            <label class="weekday"><input type="checkbox" name="weekday" value="wed"><span>Ср</span></label>
+            <label class="weekday"><input type="checkbox" name="weekday" value="thu"><span>Чт</span></label>
+            <label class="weekday"><input type="checkbox" name="weekday" value="fri"><span>Пт</span></label>
+            <label class="weekday"><input type="checkbox" name="weekday" value="sat"><span>Сб</span></label>
+            <label class="weekday"><input type="checkbox" name="weekday" value="sun"><span>Вс</span></label>
+          </div>
+        </fieldset>
+
+        <div class="schedule-times">
+          <label class="field">
+            <span class="field-label">Начало рабочего дня</span>
+            <input type="time" id="schedule-day-start" value="10:00" step="900" required>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Конец рабочего дня</span>
+            <input type="time" id="schedule-day-end" value="18:00" step="900" required>
+          </label>
+        </div>
+
+        <div class="schedule-actions">
+          <button class="btn btn-primary" type="submit" id="submit-schedule">Сохранить расписание</button>
+          <span class="schedule-saved" id="schedule-saved" hidden>Сохранено</span>
+        </div>
+      </form>
     </section>
   </main>
 

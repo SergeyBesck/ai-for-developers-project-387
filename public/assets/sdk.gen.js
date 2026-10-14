@@ -813,11 +813,22 @@ var createEventType = (options) => (options.client ?? client).post({
 });
 var getEventType = (options) => (options.client ?? client).get({ url: "/event-types/{id}", ...options });
 var listSlots = (options) => (options.client ?? client).get({ url: "/event-types/{id}/slots", ...options });
+var getSchedule = (options) => (options?.client ?? client).get({ url: "/schedule", ...options });
+var updateSchedule = (options) => (options.client ?? client).put({
+  url: "/schedule",
+  ...options,
+  headers: {
+    "Content-Type": "application/json",
+    ...options.headers
+  }
+});
 export {
   createBooking,
   createEventType,
   getEventType,
+  getSchedule,
   listBookings,
   listEventTypes,
-  listSlots
+  listSlots,
+  updateSchedule
 };

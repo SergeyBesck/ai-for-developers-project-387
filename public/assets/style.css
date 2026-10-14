@@ -507,6 +507,67 @@ a {
   color: var(--color-text-muted);
 }
 
+/* Вкладка «Расписание» */
+
+.schedule-days {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.schedule-days legend {
+  padding: 0 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.weekday-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.weekday {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.weekday:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
+.weekday input {
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.schedule-times {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+  gap: 12px 16px;
+}
+
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.schedule-saved {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 /* Кнопка-действие */
 
 .btn-secondary {

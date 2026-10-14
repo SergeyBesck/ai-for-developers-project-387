@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Schedule;
 use App\SlotGrid;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Шов «чистые функции расчёта»: сетка слотов и занятость ячейками с инжектируемыми часами.
- * Граничные случаи из Testing Decisions: округление вверх, граница окна, граница 18:00,
- * «сейчас» на границе ячейки, half-open интервалы.
+ * Шов «чистые функции расчёта»: сетка слотов и занятость ячейками с инжектируемыми часами
+ * и расписанием. Граничные случаи из Testing Decisions: округление вверх, граница окна,
+ * граница рабочего дня, «сейчас» на границе ячейки, half-open интервалы.
  */
 final class SlotGridTest extends TestCase
 {
@@ -56,7 +57,7 @@ final class SlotGridTest extends TestCase
 
     public function testSlotStartsRunFromCeilOfNowToFourteenthDay(): void
     {
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:07:00'), self::TZ, 30);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:07:00'), self::TZ, 30, self::everyDaySchedule());
 
         self::assertSame('2026-10-11 12:15:00', $starts[0]->format('Y-m-d H:i:s'));
         self::assertSame('2026-10-24 17:30:00', end($starts)->format('Y-m-d H:i:s'));
@@ -66,7 +67,7 @@ final class SlotGridTest extends TestCase
 
     public function testNowOnGridBoundaryIncludesCurrentSlot(): void
     {
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30, self::everyDaySchedule());
 
         self::assertSame('2026-10-11 12:00:00', $starts[0]->format('Y-m-d H:i:s'));
         self::assertCount(478, $starts);
@@ -77,33 +78,33 @@ final class SlotGridTest extends TestCase
         // 09:30 UTC — это 12:30 в Europe/Moscow.
         $now = new DateTimeImmutable('2026-10-11 09:30:00', new DateTimeZone('UTC'));
 
-        $starts = SlotGrid::slotStarts($now, self::TZ, 30);
+        $starts = SlotGrid::slotStarts($now, self::TZ, 30, self::everyDaySchedule());
 
         self::assertSame('2026-10-11 12:30:00', $starts[0]->format('Y-m-d H:i:s'));
     }
 
-    public function testBeforeWorkdayStartsAt0900(): void
+    public function testBeforeWorkdayStartsAtScheduleStart(): void
     {
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 08:07:00'), self::TZ, 30);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 08:07:00'), self::TZ, 30, self::everyDaySchedule());
 
         self::assertSame('2026-10-11 09:00:00', $starts[0]->format('Y-m-d H:i:s'));
     }
 
     public function testAfterWorkdayHidesTodayAndStartsTomorrow(): void
     {
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 19:00:00'), self::TZ, 30);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 19:00:00'), self::TZ, 30, self::everyDaySchedule());
 
         self::assertSame('2026-10-12 09:00:00', $starts[0]->format('Y-m-d H:i:s'));
     }
 
-    public function testLastSlotOfDayFitsBefore1800(): void
+    public function testLastSlotOfDayFitsBeforeEnd(): void
     {
         // 15 минут укладываются до 18:00 с 17:45; округлённые 20 минут (30) — только с 17:30.
-        $fifteen = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 15);
+        $fifteen = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 15, self::everyDaySchedule());
         self::assertSame('2026-10-11 17:45:00', $fifteen[23]->format('Y-m-d H:i:s'));
         self::assertSame('2026-10-12 09:00:00', $fifteen[24]->format('Y-m-d H:i:s'));
 
-        $rounded = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 20);
+        $rounded = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 20, self::everyDaySchedule());
         self::assertSame('2026-10-11 17:30:00', $rounded[22]->format('Y-m-d H:i:s'));
         self::assertSame('2026-10-12 09:00:00', $rounded[23]->format('Y-m-d H:i:s'));
     }
@@ -111,18 +112,49 @@ final class SlotGridTest extends TestCase
     public function testSlotEndingExactlyAtEndOfLastWindowDayIsIncluded(): void
     {
         // Последний день окна — сегодня + 13; слот 17:30 на30 минут оканчивается ровно в 18:00.
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30, self::everyDaySchedule());
 
         self::assertSame('2026-10-24 17:30:00', end($starts)->format('Y-m-d H:i:s'));
     }
 
     public function testFullDayDurationLeavesOnlyTheFirstSlot(): void
     {
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 08:00:00'), self::TZ, 540);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 08:00:00'), self::TZ, 540, self::everyDaySchedule());
 
         self::assertSame('2026-10-11 09:00:00', $starts[0]->format('Y-m-d H:i:s'));
         self::assertSame('2026-10-12 09:00:00', $starts[1]->format('Y-m-d H:i:s'));
         self::assertCount(14, $starts);
+    }
+
+    public function testDefaultScheduleSkipsWeekendsAndRunsFromTenToEighteen(): void
+    {
+        // «Сейчас» — воскресенье 11-го: сегодня нерабочий день, окно начинается с понедельника.
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30, self::defaultSchedule());
+
+        self::assertSame('2026-10-12 10:00:00', $starts[0]->format('Y-m-d H:i:s'));
+        self::assertSame('2026-10-23 17:30:00', end($starts)->format('Y-m-d H:i:s'));
+        // В окне 10 рабочих дней (12–16 и 19–23 октября) по 31 слоту (10:00–17:30).
+        self::assertCount(310, $starts);
+
+        foreach ($starts as $start) {
+            self::assertNotContains((int) $start->format('N'), [6, 7], $start->format('Y-m-d H:i:s'));
+        }
+    }
+
+    public function testCustomScheduleMovesWorkIntoTheWeekendAndShortensTheDay(): void
+    {
+        // Только суббота с 12:00 до 14:00: 30 минут укладываются с 12:00 до 13:30.
+        $schedule = Schedule::create(['sat'], '12:00', '14:00');
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 08:00:00'), self::TZ, 30, $schedule);
+
+        self::assertSame('2026-10-17 12:00:00', $starts[0]->format('Y-m-d H:i:s'));
+        self::assertSame('2026-10-24 13:30:00', end($starts)->format('Y-m-d H:i:s'));
+        // Две субботы в окне по 7 слотов: 12:00–13:30 с шагом 15 минут.
+        self::assertCount(14, $starts);
+
+        foreach ($starts as $start) {
+            self::assertSame(6, (int) $start->format('N'), $start->format('Y-m-d H:i:s'));
+        }
     }
 
     public function testBookingBlocksOverlappingSlotsOfAnyDuration(): void
@@ -158,7 +190,7 @@ final class SlotGridTest extends TestCase
 
     public function testSlotsAreAvailableWhileThereAreNoBookings(): void
     {
-        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30);
+        $starts = SlotGrid::slotStarts(self::moment('2026-10-11 12:00:00'), self::TZ, 30, self::defaultSchedule());
 
         $slots = SlotGrid::availability($starts, 30, []);
 
@@ -169,14 +201,17 @@ final class SlotGridTest extends TestCase
 
     public function testRejectStartAcceptsEverySlotStart(): void
     {
-        // Согласованность по построению: любое начало из slotStarts допустимо для записи.
+        // Согласованность по построению: любое начало из slotStarts допустимо для записи —
+        // для полного расписания и для расписания по умолчанию.
         $now = self::moment('2026-10-11 12:00:00');
 
-        foreach (SlotGrid::slotStarts($now, self::TZ, 30) as $start) {
-            self::assertNull(
-                SlotGrid::rejectStart($now, self::TZ, 30, $start),
-                $start->format('Y-m-d H:i:s'),
-            );
+        foreach ([self::everyDaySchedule(), self::defaultSchedule()] as $schedule) {
+            foreach (SlotGrid::slotStarts($now, self::TZ, 30, $schedule) as $start) {
+                self::assertNull(
+                    SlotGrid::rejectStart($now, self::TZ, 30, $start, $schedule),
+                    $start->format('Y-m-d H:i:s'),
+                );
+            }
         }
     }
 
@@ -197,10 +232,43 @@ final class SlotGridTest extends TestCase
         foreach ($cases as $start => $expected) {
             self::assertSame(
                 $expected,
-                SlotGrid::rejectStart($now, self::TZ, 30, self::moment($start)),
+                SlotGrid::rejectStart($now, self::TZ, 30, self::moment($start), self::everyDaySchedule()),
                 $start,
             );
         }
+    }
+
+    public function testRejectStartWithDefaultScheduleExplainsScheduleRules(): void
+    {
+        $now = self::moment('2026-10-11 12:00:00');
+        $cases = [
+            '2026-10-11 13:00:00' => 'Нерабочий день недели: воскресенье',
+            '2026-10-17 10:00:00' => 'Нерабочий день недели: суббота',
+            '2026-10-12 09:45:00' => 'Запись раньше начала рабочего дня (10:00)',
+            '2026-10-12 10:00:00' => null,
+            '2026-10-12 17:30:00' => null,
+            '2026-10-12 17:45:00' => 'Запись не укладывается до конца рабочего дня (18:00)',
+        ];
+
+        foreach ($cases as $start => $expected) {
+            self::assertSame(
+                $expected,
+                SlotGrid::rejectStart($now, self::TZ, 30, self::moment($start), self::defaultSchedule()),
+                $start,
+            );
+        }
+    }
+
+    /** Полное расписание «все дни, 09:00–18:00»: сетка и окно проверяются отдельно от расписания. */
+    private static function everyDaySchedule(): Schedule
+    {
+        return Schedule::create(Schedule::DAY_CODES, '09:00', '18:00');
+    }
+
+    /** Расписание по умолчанию: пн–пт, 10:00–18:00. */
+    private static function defaultSchedule(): Schedule
+    {
+        return Schedule::default();
     }
 
     private static function moment(string $time): DateTimeImmutable

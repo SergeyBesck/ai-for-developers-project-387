@@ -11,6 +11,7 @@ use DateTimeZone;
  * Чистые функции доменного расписания: сетка слотов и расчёт занятости ячейками.
  *
  * «сейчас» приходит извне (инжектируемые часы), системное время здесь не читается.
+ * Границы рабочего дня и рабочие дни недели берутся из расписания (App\Schedule).
  * Список слотов (listSlots) и создание записи (createBooking) обязаны использовать
  * эти же функции, а не копировать логику.
  */
@@ -21,9 +22,6 @@ final class SlotGrid
 
     /** Окно записи: сегодня — день 1, последний день окна — сегодня + 13. */
     public const WINDOW_DAYS = 14;
-
-    private const DAY_START_HOUR = 9;
-    private const DAY_END_HOUR = 18;
 
     /**
      * Округление момента вверх до сетки 15 минут: 12:00 и 12:15 остаются, 12:07 → 12:15.
@@ -79,14 +77,15 @@ final class SlotGrid
     /**
      * Причина, по которой начало не может быть началом слота, или null, если начало допустимо.
      * Правила те же, что в slotStarts: «сейчас» — из инжектируемых часов, начало на сетке,
-     * внутри рабочего дня 09:00–18:00 (с округлённой вверх длительностью), в окне 14 дней
-     * и не в прошлом.
+     * рабочий день недели и границы рабочего дня из расписания (с округлённой вверх длительностью),
+     * в окне 14 дней и не в прошлом.
      */
     public static function rejectStart(
         DateTimeImmutable $now,
         string $timezone,
         int $durationMinutes,
         DateTimeImmutable $start,
+        Schedule $schedule,
     ): ?string {
         $appTimezone = new DateTimeZone($timezone);
         $now = $now->setTimezone($appTimezone);
@@ -113,16 +112,20 @@ final class SlotGrid
             return sprintf('Время записи дальше окна в %d дней', self::WINDOW_DAYS);
         }
 
-        // Границы рабочего дня проверяются для дня, в который попадает начало.
-        if ($start < $start->setTime(self::DAY_START_HOUR, 0, 0)) {
-            return sprintf('Запись раньше начала рабочего дня (%02d:00)', self::DAY_START_HOUR);
+        if (!$schedule->isWorkingDay($start)) {
+            return sprintf('Нерабочий день недели: %s', Schedule::dayName($start));
         }
 
-        $workdayEnd = $start->setTime(self::DAY_END_HOUR, 0, 0);
+        // Границы рабочего дня проверяются для дня, в который попадает начало.
+        if ($start < $schedule->dayStartOn($start)) {
+            return sprintf('Запись раньше начала рабочего дня (%s)', $schedule->dayStart);
+        }
+
+        $workdayEnd = $schedule->dayEndOn($start);
         $duration = self::roundedDurationMinutes($durationMinutes);
 
         if ($start->modify(sprintf('+%d minutes', $duration)) > $workdayEnd) {
-            return sprintf('Запись не укладывается до конца рабочего дня (%02d:00)', self::DAY_END_HOUR);
+            return sprintf('Запись не укладывается до конца рабочего дня (%s)', $schedule->dayEnd);
         }
 
         return null;
@@ -130,13 +133,18 @@ final class SlotGrid
 
     /**
      * Начала слотов на окно записи в поясе приложения: от «сейчас», округлённого вверх до сетки,
-     * до конца 14-го дня (сегодня — день 1). Каждый день — 09:00–18:00; начало строго на сетке;
-     * слот есть, только если округлённая вверх длительность укладывается до 18:00.
+     * до конца 14-го дня (сегодня — день 1). Слоты только в рабочие дни недели по расписанию;
+     * начало строго на сетке; слот есть, только если округлённая вверх длительность укладывается
+     * до конца рабочего дня.
      *
      * @return list<DateTimeImmutable>
      */
-    public static function slotStarts(DateTimeImmutable $now, string $timezone, int $durationMinutes): array
-    {
+    public static function slotStarts(
+        DateTimeImmutable $now,
+        string $timezone,
+        int $durationMinutes,
+        Schedule $schedule,
+    ): array {
         $windowStart = self::ceilToStep($now->setTimezone(new DateTimeZone($timezone)));
         $duration = self::roundedDurationMinutes($durationMinutes);
         $today = $windowStart->setTime(0, 0, 0);
@@ -144,8 +152,13 @@ final class SlotGrid
 
         for ($day = 0; $day < self::WINDOW_DAYS; $day++) {
             $date = $today->modify(sprintf('+%d days', $day));
-            $workdayStart = $date->setTime(self::DAY_START_HOUR, 0, 0);
-            $workdayEnd = $date->setTime(self::DAY_END_HOUR, 0, 0);
+
+            if (!$schedule->isWorkingDay($date)) {
+                continue;
+            }
+
+            $workdayStart = $schedule->dayStartOn($date);
+            $workdayEnd = $schedule->dayEndOn($date);
             $from = ($day === 0 && $windowStart > $workdayStart) ? $windowStart : $workdayStart;
 
             for (

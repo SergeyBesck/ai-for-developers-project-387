@@ -51,7 +51,7 @@ export type EventType = {
      */
     description: string | null;
     /**
-     * Длительность в минутах, 1..540 (длина рабочего дня).
+     * Длительность в минутах, 1..540.
      */
     durationMinutes: number;
 };
@@ -77,6 +77,24 @@ export type Problem = {
 };
 
 /**
+ * Расписание приёма записей: одно на весь календарь, в поясе приложения (CALENDAR_TIMEZONE).
+ */
+export type Schedule = {
+    /**
+     * Рабочие дни недели; в нерабочие дни слоты не предлагаются, записи не принимаются.
+     */
+    workingDays: Array<Weekday>;
+    /**
+     * Начало рабочего дня: HH:MM, кратно 15 минутам, в поясе приложения.
+     */
+    dayStart: string;
+    /**
+     * Конец рабочего дня: HH:MM, кратно 15 минутам, строго позже начала.
+     */
+    dayEnd: string;
+};
+
+/**
  * Слот: начало возможной записи в сетке календаря.
  */
 export type Slot = {
@@ -94,6 +112,11 @@ export type SlotsResponse = {
     timezone: string;
     slots: Array<Slot>;
 };
+
+/**
+ * День недели: mon — понедельник … sun — воскресенье.
+ */
+export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
 export type ListBookingsData = {
     body?: never;
@@ -246,3 +269,48 @@ export type ListSlotsResponses = {
 };
 
 export type ListSlotsResponse = ListSlotsResponses[keyof ListSlotsResponses];
+
+export type GetScheduleData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/schedule';
+};
+
+export type GetScheduleResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Schedule;
+};
+
+export type GetScheduleResponse = GetScheduleResponses[keyof GetScheduleResponses];
+
+export type UpdateScheduleData = {
+    body: Schedule;
+    path?: never;
+    query?: never;
+    url: '/schedule';
+};
+
+export type UpdateScheduleErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: Problem;
+    /**
+     * Client error
+     */
+    422: Problem;
+};
+
+export type UpdateScheduleError = UpdateScheduleErrors[keyof UpdateScheduleErrors];
+
+export type UpdateScheduleResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Schedule;
+};
+
+export type UpdateScheduleResponse = UpdateScheduleResponses[keyof UpdateScheduleResponses];

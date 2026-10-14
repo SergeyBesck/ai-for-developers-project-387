@@ -30,6 +30,8 @@ class JaneObjectNormalizer implements DenormalizerInterface, NormalizerInterface
         
         \App\Generated\Model\Problem::class => \App\Generated\Normalizer\ProblemNormalizer::class,
         
+        \App\Generated\Model\Schedule::class => \App\Generated\Normalizer\ScheduleNormalizer::class,
+        
         \App\Generated\Model\Slot::class => \App\Generated\Normalizer\SlotNormalizer::class,
         
         \App\Generated\Model\SlotsResponse::class => \App\Generated\Normalizer\SlotsResponseNormalizer::class,
@@ -69,6 +71,7 @@ class JaneObjectNormalizer implements DenormalizerInterface, NormalizerInterface
             \App\Generated\Normalizer\EventTypeNormalizer::class => new \App\Generated\Normalizer\EventTypeNormalizer(),
             \App\Generated\Normalizer\EventTypeCreateNormalizer::class => new \App\Generated\Normalizer\EventTypeCreateNormalizer(),
             \App\Generated\Normalizer\ProblemNormalizer::class => new \App\Generated\Normalizer\ProblemNormalizer(),
+            \App\Generated\Normalizer\ScheduleNormalizer::class => new \App\Generated\Normalizer\ScheduleNormalizer(),
             \App\Generated\Normalizer\SlotNormalizer::class => new \App\Generated\Normalizer\SlotNormalizer(),
             \App\Generated\Normalizer\SlotsResponseNormalizer::class => new \App\Generated\Normalizer\SlotsResponseNormalizer(),
             \App\Generated\Runtime\Normalizer\ReferenceNormalizer::class => new \App\Generated\Runtime\Normalizer\ReferenceNormalizer(),

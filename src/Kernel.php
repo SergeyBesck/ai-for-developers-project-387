@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App;
 
 use App\Handler\CreateBookingHandler;
+use App\Handler\GetScheduleHandler;
 use App\Handler\HandlerInterface;
 use App\Handler\ListBookingsHandler;
 use App\Handler\ListSlotsHandler;
+use App\Handler\UpdateScheduleHandler;
 use App\Http\Json;
+use App\ScheduleRepository;
 use League\OpenAPIValidation\PSR7\Exception\NoOperation;
 use League\OpenAPIValidation\PSR7\Exception\NoResponseCode;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
@@ -37,6 +40,7 @@ final class Kernel
 
     private readonly EventTypeRepository $eventTypes;
     private readonly BookingRepository $bookings;
+    private readonly ScheduleRepository $schedules;
     private readonly Clock $clock;
     private readonly string $timezone;
     private readonly Router $router;
@@ -49,6 +53,7 @@ final class Kernel
         $database->migrate();
         $this->eventTypes = new EventTypeRepository($database, $clock);
         $this->bookings = new BookingRepository($database, $clock);
+        $this->schedules = new ScheduleRepository($database);
         $this->clock = $clock;
         $this->timezone = $config->timezone;
 
@@ -150,12 +155,14 @@ final class Kernel
             ListSlotsHandler::class => new ListSlotsHandler(
                 $this->eventTypes,
                 $this->bookings,
+                $this->schedules,
                 $this->clock,
                 $this->timezone,
             ),
             CreateBookingHandler::class => new CreateBookingHandler(
                 $this->eventTypes,
                 $this->bookings,
+                $this->schedules,
                 $this->clock,
                 $this->timezone,
             ),
@@ -164,6 +171,8 @@ final class Kernel
                 $this->clock,
                 $this->timezone,
             ),
+            GetScheduleHandler::class => new GetScheduleHandler($this->schedules),
+            UpdateScheduleHandler::class => new UpdateScheduleHandler($this->schedules),
             default => new $handlerClass($this->eventTypes),
         };
     }

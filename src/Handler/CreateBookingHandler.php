@@ -8,6 +8,7 @@ use App\BookingRepository;
 use App\Clock;
 use App\EventTypeRepository;
 use App\Http\Json;
+use App\ScheduleRepository;
 use App\SlotConflictException;
 use App\SlotGrid;
 use DateTimeImmutable;
@@ -18,15 +19,16 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * createBooking: POST /bookings → 201 с ресурсом целиком; запись и её ячейки создаются
- * одной транзакцией. Неизвестный тип события → 404, время вне сетки/окна/рабочего дня
- * или в прошлом → 422, пересечение с другой записью (в том числе другого типа события)
- * → 409 problem+json с полным откатом.
+ * одной транзакцией. Неизвестный тип события → 404, время вне сетки/окна/рабочих дней
+ * расписания или в прошлом → 422, пересечение с другой записью (в том числе другого типа
+ * события) → 409 problem+json с полным откатом.
  */
 final class CreateBookingHandler implements HandlerInterface
 {
     public function __construct(
         private readonly EventTypeRepository $eventTypes,
         private readonly BookingRepository $bookings,
+        private readonly ScheduleRepository $schedules,
         private readonly Clock $clock,
         private readonly string $timezone,
     ) {
@@ -59,12 +61,13 @@ final class CreateBookingHandler implements HandlerInterface
         $note = isset($body['note']) && is_string($body['note']) ? $body['note'] : null;
         $id = self::uuid4();
 
-        // Правила сетки и окна — те же чистые функции, что рисуют список слотов.
+        // Правила сетки, окна и расписания — те же чистые функции, что рисуют список слотов.
         $rejection = SlotGrid::rejectStart(
             $this->clock->now(),
             $this->timezone,
             $eventType['durationMinutes'],
             $start,
+            $this->schedules->get(),
         );
 
         if ($rejection !== null) {

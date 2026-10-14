@@ -81,5 +81,15 @@ final class Database
         $this->pdo()->exec(
             'CREATE UNIQUE INDEX IF NOT EXISTS booking_cells_cell_unique ON booking_cells (cell)',
         );
+
+        // Расписание приёма записей: одна строка (id = 1). Отсутствие строки — расписание по умолчанию.
+        $this->pdo()->exec(
+            'CREATE TABLE IF NOT EXISTS schedule (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                working_days TEXT NOT NULL,
+                day_start TEXT NOT NULL,
+                day_end TEXT NOT NULL
+            )',
+        );
     }
 }

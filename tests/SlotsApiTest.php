@@ -82,48 +82,65 @@ final class SlotsApiTest extends TestCase
     {
         $this->createEventType('intro-call', 30);
 
-        // «Сейчас» 12:07 → первый слот 12:15;12:00 и всё раньше скрыты.
-        $response = $this->requestWithClock('GET', '/api/event-types/intro-call/slots', null, '2026-10-11 12:07:00');
+        // «Сейчас» в понедельник 12:07 → первый слот 12:15; 12:00 и всё раньше скрыты.
+        $response = $this->requestWithClock('GET', '/api/event-types/intro-call/slots', null, '2026-10-12 12:07:00');
 
         $slots = $this->decode($response)['slots'];
-        self::assertSame('2026-10-11T12:15:00+03:00', $slots[0]['start']);
+        self::assertSame('2026-10-12T12:15:00+03:00', $slots[0]['start']);
     }
 
     public function testNowOnGridBoundaryKeepsCurrentSlot(): void
     {
         $this->createEventType('intro-call', 30);
 
-        $slots = $this->decode($this->request('GET', '/api/event-types/intro-call/slots'))['slots'];
+        // «Сейчас» в понедельник ровно 12:00 — слот 12:00 остаётся.
+        $response = $this->requestWithClock('GET', '/api/event-types/intro-call/slots', null, '2026-10-12 12:00:00');
 
-        self::assertSame('2026-10-11T12:00:00+03:00', $slots[0]['start']);
+        $slots = $this->decode($response)['slots'];
+        self::assertSame('2026-10-12T12:00:00+03:00', $slots[0]['start']);
     }
 
-    public function testWindowEndsOnFourteenthDayAt1800(): void
+    public function testWindowCoversFourteenDaysButOnlyWorkingDays(): void
     {
         $this->createEventType('intro-call', 30);
 
         $slots = $this->decode($this->request('GET', '/api/event-types/intro-call/slots'))['slots'];
         $starts = array_column($slots, 'start');
 
-        // Сегодня — день 1, последний день — сегодня + 13; последний слот укладывается до 18:00.
-        self::assertSame('2026-10-11T12:00:00+03:00', $starts[0]);
-        self::assertSame('2026-10-24T17:30:00+03:00', end($starts));
-        // Сегодня23 слота (12:00–17:30), ещё 13 полных дней по 35 слотов (09:00–17:30).
-        self::assertCount(478, $starts);
+        // Сегодня — воскресенье (нерабочее), последний день окна — суббота 24-го (тоже нерабочая):
+        // слоты идут с понедельника 12-го по пятницу 23-го, в часы расписания 10:00–18:00.
+        self::assertSame('2026-10-12T10:00:00+03:00', $starts[0]);
+        self::assertSame('2026-10-23T17:30:00+03:00', end($starts));
+        // 10 рабочих дней по 31 слоту (10:00–17:30, 30 минут).
+        self::assertCount(310, $starts);
+    }
+
+    public function testWeekendsAreAbsentFromSlotsByDefault(): void
+    {
+        $this->createEventType('intro-call', 30);
+
+        $starts = array_column($this->decode($this->request('GET', '/api/event-types/intro-call/slots'))['slots'], 'start');
+
+        // Воскресенье 11-го (сегодня), суббота 17-го и воскресенье 18-го внутри окна — без слотов.
+        self::assertCount(0, array_filter($starts, static fn (string $start): bool => (
+            str_starts_with($start, '2026-10-11')
+            || str_starts_with($start, '2026-10-17')
+            || str_starts_with($start, '2026-10-18')
+        )));
     }
 
     public function testDurationRoundsUpToGridForLastSlot(): void
     {
-        // 20 минут округляются вверх до 30: последний слот дня — 17:30, а не 17:45.
+        // 20 минут округляются вверх до 30: последний слот рабочего дня — 17:30, а не 17:45.
         $this->createEventType('long-call', 20);
 
         $slots = $this->decode($this->request('GET', '/api/event-types/long-call/slots'))['slots'];
-        $today = array_values(array_filter(
+        $monday = array_values(array_filter(
             $slots,
-            static fn (array $slot): bool => str_starts_with($slot['start'], '2026-10-11'),
+            static fn (array $slot): bool => str_starts_with($slot['start'], '2026-10-12'),
         ));
 
-        self::assertSame('2026-10-11T17:30:00+03:00', end($today)['start']);
+        self::assertSame('2026-10-12T17:30:00+03:00', end($monday)['start']);
     }
 
     public function testUnknownEventTypeReturns404ProblemJson(): void
