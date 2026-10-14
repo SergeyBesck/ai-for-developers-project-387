@@ -8,13 +8,15 @@ use App\BookingRepository;
 use App\Clock;
 use App\EventTypeRepository;
 use App\Http\Json;
+use App\ScheduleRepository;
 use App\SlotGrid;
 use DateTimeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * listSlots: GET /event-types/{id}/slots — сетка слотов на окно записи; 404 для неизвестного типа.
+ * listSlots: GET /event-types/{id}/slots — сетка слотов на окно записи в рабочие дни
+ * по расписанию приёма; 404 для неизвестного типа.
  *
  * Слоты и занятость считаются чистыми функциями App\SlotGrid; источник занятости — реальные
  * записи из хранилища (BookingRepository), копии логики нет.
@@ -24,6 +26,7 @@ final class ListSlotsHandler implements HandlerInterface
     public function __construct(
         private readonly EventTypeRepository $eventTypes,
         private readonly BookingRepository $bookings,
+        private readonly ScheduleRepository $schedules,
         private readonly Clock $clock,
         private readonly string $timezone,
     ) {
@@ -38,7 +41,12 @@ final class ListSlotsHandler implements HandlerInterface
             return Json::problem(404, 'Тип события не найден', sprintf('Тип события с id "%s" не найден', $id));
         }
 
-        $starts = SlotGrid::slotStarts($this->clock->now(), $this->timezone, $eventType['durationMinutes']);
+        $starts = SlotGrid::slotStarts(
+            $this->clock->now(),
+            $this->timezone,
+            $eventType['durationMinutes'],
+            $this->schedules->get(),
+        );
         $slots = SlotGrid::availability($starts, $eventType['durationMinutes'], $this->bookings->allIntervals());
 
         return Json::success(200, [
