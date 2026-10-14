@@ -543,6 +543,7 @@
               "$ref": "#/components/schemas/Weekday"
             },
             "minItems": 1,
+            "uniqueItems": true,
             "description": "Рабочие дни недели; в нерабочие дни слоты не предлагаются, записи не принимаются."
           },
           "dayStart": {

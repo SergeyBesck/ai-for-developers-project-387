@@ -106,6 +106,7 @@ final class ScheduleApiTest extends TestCase
             'время без ведущего нуля' => ['dayStart' => '9:00'],
             'время за сутками' => ['dayEnd' => '24:00'],
             'неизвестный день' => ['workingDays' => ['mon', 'someday']],
+            'дубликаты дней' => ['workingDays' => ['mon', 'mon']],
             'пустой список дней' => ['workingDays' => []],
             'нет dayEnd' => null,
         ];

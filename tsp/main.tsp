@@ -1,9 +1,11 @@
 ﻿import "@typespec/http";
 import "@typespec/openapi";
 import "@typespec/openapi3";
+import "@typespec/json-schema";
 
 using Http;
 using OpenAPI;
+using TypeSpec.JsonSchema;
 
 @service(#{ title: "Calendar" })
 @server("/api", "Calendar API")
@@ -28,6 +30,7 @@ enum Weekday {
 model Schedule {
   @doc("Рабочие дни недели; в нерабочие дни слоты не предлагаются, записи не принимаются.")
   @minItems(1)
+  @uniqueItems
   workingDays: Weekday[];
 
   @doc("Начало рабочего дня: HH:MM, кратно 15 минутам, в поясе приложения.")
