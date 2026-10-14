@@ -6,6 +6,9 @@ on:
 
 jobs:
   triage:
+    if: >-
+      github.event.issue.user.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -21,6 +24,7 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
           model: opencode/mimo-v2.6-flash-free
+          share: false
           prompt: |
             Ты разбираешь новую жалобу пользователя в проекте «Календарь звонков»
             (PHP, SQLite, контракт API в tsp/ и openapi.json).
