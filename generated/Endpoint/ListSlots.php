@@ -7,7 +7,7 @@ class ListSlots extends \App\Generated\Runtime\Client\BaseEndpoint implements \A
     protected $id;
     protected $accept;
     /**
-     * Слоты на окно записи (от текущего момента, округлённого вверх до 15 минут, до конца 14-го календарного дня в поясе приложения).
+     * Слоты на окно записи в рабочие дни по расписанию приёма (от текущего момента, округлённого вверх до 15 минут, до конца 14-го календарного дня в поясе приложения).
      * @param string $id
      * @param array $accept Accept content header application/json|application/problem+json
      */

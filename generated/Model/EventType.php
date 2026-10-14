@@ -24,7 +24,7 @@ class EventType implements AdditionalPropertiesInterface
      */
     public ?string $description;
     /**
-     * Длительность в минутах, 1..540 (длина рабочего дня).
+     * Длительность в минутах, 1..540.
      *
      * @var int
      */

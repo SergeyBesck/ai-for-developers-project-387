@@ -11,4 +11,6 @@ return [
     ['method' => 'POST', 'path' => '/event-types', 'operationId' => 'createEventType', 'handler' => 'App\Handler\CreateEventTypeHandler'],
     ['method' => 'GET', 'path' => '/event-types/{id}', 'operationId' => 'getEventType', 'handler' => 'App\Handler\GetEventTypeHandler'],
     ['method' => 'GET', 'path' => '/event-types/{id}/slots', 'operationId' => 'listSlots', 'handler' => 'App\Handler\ListSlotsHandler'],
+    ['method' => 'GET', 'path' => '/schedule', 'operationId' => 'getSchedule', 'handler' => 'App\Handler\GetScheduleHandler'],
+    ['method' => 'PUT', 'path' => '/schedule', 'operationId' => 'updateSchedule', 'handler' => 'App\Handler\UpdateScheduleHandler'],
 ];

@@ -13,6 +13,32 @@ namespace Calendar;
 
 // ===== Схемы =====
 
+@doc("День недели: mon — понедельник … sun — воскресенье.")
+enum Weekday {
+  mon,
+  tue,
+  wed,
+  thu,
+  fri,
+  sat,
+  sun,
+}
+
+@doc("Расписание приёма записей: одно на весь календарь, в поясе приложения (CALENDAR_TIMEZONE).")
+model Schedule {
+  @doc("Рабочие дни недели; в нерабочие дни слоты не предлагаются, записи не принимаются.")
+  @minItems(1)
+  workingDays: Weekday[];
+
+  @doc("Начало рабочего дня: HH:MM, кратно 15 минутам, в поясе приложения.")
+  @pattern("^([01][0-9]|2[0-3]):(00|15|30|45)$")
+  dayStart: string;
+
+  @doc("Конец рабочего дня: HH:MM, кратно 15 минутам, строго позже начала.")
+  @pattern("^([01][0-9]|2[0-3]):(00|15|30|45)$")
+  dayEnd: string;
+}
+
 @doc("Тип события: вид встречи, на который идёт запись.")
 model EventType {
   @doc("Slug-идентификатор, уникален.")
@@ -24,7 +50,7 @@ model EventType {
   @doc("Описание; null, если не задано.")
   description: string | null;
 
-  @doc("Длительность в минутах, 1..540 (длина рабочего дня).")
+  @doc("Длительность в минутах, 1..540.")
   @minValue(1)
   @maxValue(540)
   durationMinutes: int32;
@@ -180,8 +206,24 @@ op getEventType(@path id: string): EventType | Problem404;
 @tag("Slots")
 @get
 @route("/event-types/{id}/slots")
-@doc("Слоты на окно записи (от текущего момента, округлённого вверх до 15 минут, до конца 14-го календарного дня в поясе приложения).")
+@doc("Слоты на окно записи в рабочие дни по расписанию приёма (от текущего момента, округлённого вверх до 15 минут, до конца 14-го календарного дня в поясе приложения).")
 op listSlots(@path id: string): SlotsResponse | Problem404;
+
+@tag("Schedule")
+@get
+@route("/schedule")
+@doc("Расписание приёма записей: до первого изменения — рабочие дни пн–пт, 10:00–18:00 в поясе приложения.")
+op getSchedule(): {
+  @body schedule: Schedule;
+};
+
+@tag("Schedule")
+@put
+@route("/schedule")
+@doc("Обновление расписания Хостом: рабочие дни недели плюс единые часы для всех рабочих дней. 422 — конец рабочего дня не позже начала. Уже созданные записи не изменяются.")
+op updateSchedule(@body body: Schedule): {
+  @body schedule: Schedule;
+} | Problem400 | Problem422;
 
 @tag("Bookings")
 @post
